@@ -43,12 +43,14 @@ const App = {
         this.initAuth();
         this.setupNavigation();
         this.setupModals();
-        
+
+        // Start listening for Firebase auth state changes
+        if (typeof FirebaseAuth !== 'undefined') {
+            FirebaseAuth.listenAuthState();
+        }
+
         // Render initial view
         this.switchTab('dashboard');
-
-        // Check if Google Sign-In library is available
-        this.initGoogleIdentity();
     },
 
     // Theme Switcher (Dark / Light)
@@ -133,38 +135,29 @@ const App = {
     },
 
     openGoogleSignInModal() {
-        const modal = document.getElementById('modal-google-auth');
-        if (modal) modal.classList.remove('hidden');
-    },
-
-    signInWithGoogleMock(email = "rohan.trader@gmail.com", name = "Rohan Trader") {
-        AppState.data.user = {
-            isLoggedIn: true,
-            name: name,
-            email: email,
-            avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
-            role: "Algo & Discretionary Trader"
-        };
-        AppState.saveData();
-        this.renderUserUI();
-        this.closeModal('modal-google-auth');
-        this.showToast(`Signed in as ${name}!`, "success");
+        // Directly trigger Firebase Google Sign-In popup
+        if (typeof FirebaseAuth !== 'undefined') {
+            window._freshGoogleLogin = true;
+            FirebaseAuth.signInWithGoogle();
+        } else {
+            App.showToast('Firebase not loaded yet. Please wait...', 'warning');
+        }
     },
 
     signOutGoogle() {
-        AppState.data.user.isLoggedIn = false;
-        AppState.saveData();
-        this.renderUserUI();
-        this.showToast("Signed out of Google account.", "info");
-    },
-
-    initGoogleIdentity() {
-        // Optional Google Identity Services API Hook
-        window.handleGoogleCredentialResponse = (response) => {
-            console.log("Encoded JWT ID token: " + response.credential);
-            // In a production setup with client_id, parse JWT token payload
-            this.signInWithGoogleMock("authenticated.trader@gmail.com", "Google Verified Trader");
-        };
+        if (typeof FirebaseAuth !== 'undefined') {
+            FirebaseAuth.signOut().then(() => {
+                AppState.data.user = { isLoggedIn: false };
+                AppState.saveData();
+                this.renderUserUI();
+                this.showToast('Signed out of Google account.', 'info');
+            });
+        } else {
+            AppState.data.user.isLoggedIn = false;
+            AppState.saveData();
+            this.renderUserUI();
+            this.showToast('Signed out.', 'info');
+        }
     },
 
     // Navigation Tab Switching
