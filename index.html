@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MY TRADE - Algorithmic & Discretionary Trading Operating System</title>
+
+    <!-- Tailwind CSS CDN with Dark Mode Class Strategy -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        emerald: {
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- FontAwesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Google Identity Services (GIS) Script for Real Sign-in Support -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-slate-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen flex flex-col antialiased transition-colors duration-200">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container"></div>
+
+    <!-- Top Navigation Bar -->
+    <header class="sticky top-0 z-40 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 gap-4">
+                
+                <!-- Logo & Brand Name -->
+                <div class="flex items-center gap-3 cursor-pointer" onclick="App.switchTab('dashboard')">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
+                        <i class="fas fa-chart-line text-lg"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-600 via-teal-500 to-indigo-600 bg-clip-text text-transparent">
+                                MY TRADE
+                            </span>
+                            <span class="px-1.5 py-0.5 rounded text-[10px] font-black uppercase bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300/40">
+                                PRO
+                            </span>
+                        </div>
+                        <span class="text-[10px] text-gray-400 dark:text-gray-500 hidden sm:block">Trading Edge & Infrastructure OS</span>
+                    </div>
+                </div>
+
+                <!-- Live Market Status Ticker -->
+                <div class="hidden xl:flex items-center gap-4 text-xs font-mono bg-gray-100 dark:bg-gray-800/80 px-3.5 py-1.5 rounded-full border border-gray-200 dark:border-gray-700">
+                    <span class="flex items-center gap-1.5 text-emerald-500">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        MARKETS OPEN
+                    </span>
+                    <span class="text-gray-400">|</span>
+                    <span>NIFTY: <b class="text-emerald-500">24,420 (+0.45%)</b></span>
+                    <span class="text-gray-400">|</span>
+                    <span>GOLD: <b class="text-emerald-500">$2,748 (+0.62%)</b></span>
+                    <span class="text-gray-400">|</span>
+                    <span>BTC: <b class="text-emerald-500">$68,150 (+1.8%)</b></span>
+                </div>
+
+                <!-- Right Action Bar: Theme Toggle & User Auth -->
+                <div class="flex items-center gap-3">
+                    <!-- Light / Dark Mode Toggle Button (Requirement 6) -->
+                    <button id="theme-toggle-btn" onclick="App.toggleTheme()" class="w-10 h-10 rounded-xl flex items-center justify-center bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 transition">
+                        <i class="fas fa-sun text-amber-400 text-lg"></i>
+                    </button>
+
+                    <!-- Google Sign-In Profile Widget (Requirement 5) -->
+                    <div id="user-profile-widget">
+                        <!-- Populated by App.renderUserUI() -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Secondary Navigation Tabs Bar -->
+            <div class="flex items-center gap-1 sm:gap-2 overflow-x-auto py-2 no-scrollbar border-t border-gray-100 dark:border-gray-800/60 text-xs sm:text-sm font-semibold">
+                <button class="nav-tab px-3 sm:px-4 py-2 rounded-xl transition flex items-center gap-2 whitespace-nowrap active" data-tab="dashboard">
+                    <i class="fas fa-grip"></i> Dashboard
+                </button>
+                <button class="nav-tab px-3 sm:px-4 py-2 rounded-xl transition flex items-center gap-2 whitespace-nowrap" data-tab="journal">
+                    <i class="fas fa-book-journal-whills"></i> Daily Journal
+                </button>
+                <button class="nav-tab px-3 sm:px-4 py-2 rounded-xl transition flex items-center gap-2 whitespace-nowrap" data-tab="strategies">
+                    <i class="fas fa-chess-knight"></i> Strategies
+                </button>
+                <button class="nav-tab px-3 sm:px-4 py-2 rounded-xl transition flex items-center gap-2 whitespace-nowrap" data-tab="backtests">
+                    <i class="fas fa-chart-column"></i> Backtest Results
+                </button>
+                <button class="nav-tab px-3 sm:px-4 py-2 rounded-xl transition flex items-center gap-2 whitespace-nowrap" data-tab="code">
+                    <i class="fas fa-code-branch"></i> Code Vault
+                </button>
+                <button class="nav-tab px-3 sm:px-4 py-2 rounded-xl transition flex items-center gap-2 whitespace-nowrap" data-tab="vps">
+                    <i class="fas fa-server"></i> VPS Servers
+                </button>
+                <button class="nav-tab px-3 sm:px-4 py-2 rounded-xl transition flex items-center gap-2 whitespace-nowrap" data-tab="broker">
+                    <i class="fas fa-vault text-amber-500"></i> Broker Vault
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- TAB 1: Dashboard Overview -->
+        <section id="view-dashboard" class="tab-view">
+            <div id="dashboard-content"></div>
+        </section>
+
+        <!-- TAB 2: Daily Journal (Requirement 7) -->
+        <section id="view-journal" class="tab-view hidden">
+            <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-2">
+                        <i class="fas fa-book-open text-emerald-500"></i> Daily Trading Journal
+                    </h2>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Log every detail of your daily trades: entries, exits, R:R, psychological state, and session reflections.
+                    </p>
+                </div>
+            </div>
+            <div id="journal-content"></div>
+        </section>
+
+        <!-- TAB 3: Strategies (Requirement 2) -->
+        <section id="view-strategies" class="tab-view hidden">
+            <div class="mb-6">
+                <h2 class="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-2">
+                    <i class="fas fa-chess-knight text-emerald-500"></i> Trading Strategies Matrix
+                </h2>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Systematic rules, empirical win rates, risk-reward parameters, advantages, and limitations for each setup.
+                </p>
+            </div>
+            <div id="strategies-content"></div>
+        </section>
+
+        <!-- TAB 4: Backtest Results (Requirement 3) -->
+        <section id="view-backtests" class="tab-view hidden">
+            <div class="mb-6">
+                <h2 class="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-2">
+                    <i class="fas fa-chart-line text-emerald-500"></i> Backtest Performance & Equity Curves
+                </h2>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Historical testing logs, Sharpe ratios, profit factors, drawdowns, and interactive equity curve visualizations.
+                </p>
+            </div>
+            <div id="backtest-content"></div>
+        </section>
+
+        <!-- TAB 5: Code Repository with Folders (Requirement 1) -->
+        <section id="view-code" class="tab-view hidden">
+            <div class="mb-6">
+                <h2 class="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-2">
+                    <i class="fas fa-laptop-code text-emerald-500"></i> Code & Script Vault
+                </h2>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Organized by folders: PineScript, Python trading bots, MQL5 Expert Advisors, and VPS shell scripts.
+                </p>
+            </div>
+            <div id="code-vault-content"></div>
+        </section>
+
+        <!-- TAB 6: VPS Server Data (Requirement 4) -->
+        <section id="view-vps" class="tab-view hidden">
+            <div class="mb-6">
+                <h2 class="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-2">
+                    <i class="fas fa-server text-emerald-500"></i> VPS Servers & Bot Telemetry
+                </h2>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Manage execution nodes, round-trip latency to exchanges, running bot PIDs, and server health.
+                </p>
+            </div>
+            <div id="vps-content"></div>
+        </section>
+
+        <!-- TAB 7: Broker Password Vault (Requirement 8) -->
+        <section id="view-broker" class="tab-view hidden">
+            <div class="mb-6">
+                <h2 class="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-2">
+                    <i class="fas fa-vault text-amber-500"></i> Broker Login Credentials Vault
+                </h2>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Password-protected encrypted vault storing broker credentials, 2FA backup codes, API secrets, and server terminals.
+                </p>
+            </div>
+            <div id="broker-vault-content"></div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-auto border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 py-6 text-xs text-gray-500 dark:text-gray-400">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2 font-semibold">
+                <span class="text-emerald-500 font-bold">MY TRADE</span> • All trading data stored securely in browser LocalStorage.
+            </div>
+            <div class="flex items-center gap-4">
+                <button onclick="AppState.resetAllData()" class="text-gray-400 hover:text-rose-500 transition">
+                    <i class="fas fa-arrow-rotate-left mr-1"></i> Reset to Sample Data
+                </button>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ==================== MODALS ==================== -->
+
+    <!-- Modal 1: Google Sign-in / Auth Modal (Requirement 5) -->
+    <div id="modal-google-auth" class="modal-backdrop fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                    </svg>
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">Google Sign-In Criteria</h3>
+                </div>
+                <button onclick="App.closeModal('modal-google-auth')" class="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <i class="fas fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-6">
+                Sign in with your Google account to sync your journal trades, cloud bots, and password vault.
+            </p>
+
+            <!-- Choose Account Simulated / GIS -->
+            <div class="space-y-3">
+                <button onclick="App.signInWithGoogleMock('rohan.trader@gmail.com', 'Rohan Trader')" class="w-full flex items-center justify-between p-3.5 bg-gray-50 dark:bg-gray-700/60 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-2xl border border-gray-200 dark:border-gray-600 transition text-left">
+                    <div class="flex items-center gap-3">
+                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" class="w-10 h-10 rounded-full object-cover">
+                        <div>
+                            <span class="text-sm font-bold text-gray-900 dark:text-white block">Rohan Trader</span>
+                            <span class="text-xs text-gray-400 block">rohan.trader@gmail.com</span>
+                        </div>
+                    </div>
+                    <span class="text-xs font-semibold text-emerald-500">Continue →</span>
+                </button>
+
+                <button onclick="App.signInWithGoogleMock('algo.quant@gmail.com', 'Algo Quant Desk')" class="w-full flex items-center justify-between p-3.5 bg-gray-50 dark:bg-gray-700/60 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-2xl border border-gray-200 dark:border-gray-600 transition text-left">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold">
+                            AQ
+                        </div>
+                        <div>
+                            <span class="text-sm font-bold text-gray-900 dark:text-white block">Algo Quant Desk</span>
+                            <span class="text-xs text-gray-400 block">algo.quant@gmail.com</span>
+                        </div>
+                    </div>
+                    <span class="text-xs font-semibold text-emerald-500">Continue →</span>
+                </button>
+            </div>
+
+            <!-- Custom Google Identity Services Client ID note -->
+            <div class="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700/60 text-[11px] text-gray-400">
+                <i class="fab fa-google text-gray-400 mr-1"></i> Supports Google Identity Services OAuth 2.0 with standard JWT credentials tokens.
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 2: Log / Edit Trade Journal Modal (Requirement 7) -->
+    <div id="modal-trade" class="modal-backdrop fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700 max-h-[92vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-100 dark:border-gray-700">
+                <h3 id="trade-modal-title" class="text-lg font-bold text-gray-900 dark:text-white">Log Trade Event</h3>
+                <button onclick="App.closeModal('modal-trade')" class="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <i class="fas fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="trade-form" class="space-y-4">
+                <input type="hidden" id="trade-form-id">
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Date</label>
+                        <input type="date" id="trade-form-date" required class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Time</label>
+                        <input type="time" id="trade-form-time" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Asset / Symbol</label>
+                        <input type="text" id="trade-form-symbol" placeholder="e.g. BANKNIFTY, XAUUSD, BTC" required class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Direction</label>
+                        <select id="trade-form-type" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                            <option value="BUY">BUY / LONG</option>
+                            <option value="SELL">SELL / SHORT</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Strategy Used</label>
+                        <select id="trade-form-strategy" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Execution Broker</label>
+                        <select id="trade-form-broker" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Entry Price</label>
+                        <input type="number" step="any" id="trade-form-entry" required class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Exit Price</label>
+                        <input type="number" step="any" id="trade-form-exit" required class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Quantity / Lots</label>
+                        <input type="number" step="any" id="trade-form-qty" value="1" required class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">P&L ($ or ₹)</label>
+                        <input type="number" step="any" id="trade-form-pnl" placeholder="Auto-calculated" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Risk : Reward (R:R)</label>
+                        <input type="text" id="trade-form-rr" placeholder="e.g. 1:2.5" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Market Session</label>
+                        <select id="trade-form-session" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                            <option value="NSE Morning">NSE Morning (India)</option>
+                            <option value="London Open">London Open (Forex/Metals)</option>
+                            <option value="NY Session">New York Session (US/Crypto)</option>
+                            <option value="Asian Session">Asian Session</option>
+                            <option value="Crypto 24/7">Crypto 24/7</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Psychology / Emotion</label>
+                        <select id="trade-form-emotion" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                            <option value="Disciplined">Disciplined (Rules Followed)</option>
+                            <option value="Calm">Calm & In Control</option>
+                            <option value="Patient">Patient Entry</option>
+                            <option value="Hesitant">Hesitant Entry</option>
+                            <option value="FOMO">FOMO Chase</option>
+                            <option value="Greedy">Greedy (Failed TP)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Chart Screenshot Image URL</label>
+                    <input type="url" id="trade-form-screenshot" placeholder="https://..." class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Trade Reflections & Daily Log Details</label>
+                    <textarea id="trade-form-notes" rows="3" placeholder="What happened that day on trading? Why did you enter? Did you manage the trade properly?" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none"></textarea>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="App.closeModal('modal-trade')" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-xl">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow">Save to Journal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 3: Strategy Modal (Requirement 2) -->
+    <div id="modal-strategy" class="modal-backdrop fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700 max-h-[92vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-100 dark:border-gray-700">
+                <h3 id="strat-modal-title" class="text-lg font-bold text-gray-900 dark:text-white">Add Strategy</h3>
+                <button onclick="App.closeModal('modal-strategy')" class="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <i class="fas fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="strategy-form" class="space-y-4">
+                <input type="hidden" id="strat-form-id">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Strategy Name</label>
+                        <input type="text" id="strat-form-name" required placeholder="e.g. ICT Silver Bullet" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Category</label>
+                        <input type="text" id="strat-form-cat" required placeholder="Smart Money Concepts, Breakout, etc." class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Win Rate %</label>
+                        <input type="number" step="0.1" id="strat-form-winrate" required placeholder="68.5" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Risk : Reward</label>
+                        <input type="text" id="strat-form-rr" placeholder="1 : 2.5" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Profit Factor</label>
+                        <input type="number" step="0.01" id="strat-form-pf" placeholder="2.1" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Timeframe</label>
+                        <input type="text" id="strat-form-tf" placeholder="e.g. 5M, 15M, 1H" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Assets / Instruments (comma separated)</label>
+                        <input type="text" id="strat-form-instruments" placeholder="EURUSD, XAUUSD, NIFTY" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Execution Rules</label>
+                    <textarea id="strat-form-rules" rows="2" placeholder="Entry trigger, confirmation, stop loss logic..." class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-emerald-500 mb-1">Advantages (One per line)</label>
+                        <textarea id="strat-form-adv" rows="3" placeholder="High Risk to Reward&#10;Clear objective rules" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-rose-500 mb-1">Disadvantages / Risks (One per line)</label>
+                        <textarea id="strat-form-dis" rows="3" placeholder="Lower frequency of trades&#10;Requires patience" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none"></textarea>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="App.closeModal('modal-strategy')" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-xl">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow">Save Strategy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 4: Backtest Modal (Requirement 3) -->
+    <div id="modal-backtest" class="modal-backdrop fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-100 dark:border-gray-700">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Log Backtest Run</h3>
+                <button onclick="App.closeModal('modal-backtest')" class="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <i class="fas fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="backtest-form" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Strategy Name</label>
+                        <input type="text" id="bt-form-strat" required placeholder="ORB Breakout" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Asset</label>
+                        <input type="text" id="bt-form-asset" required placeholder="NIFTY / Gold" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Testing Period</label>
+                    <input type="text" id="bt-form-period" required placeholder="Jan 2025 - Oct 2026" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Starting Capital ($)</label>
+                        <input type="number" id="bt-form-start-cap" required value="10000" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Ending Capital ($)</label>
+                        <input type="number" id="bt-form-end-cap" required placeholder="18500" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Win Rate %</label>
+                        <input type="number" step="0.1" id="bt-form-winrate" required placeholder="65" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Profit Factor</label>
+                        <input type="number" step="0.01" id="bt-form-pf" required placeholder="2.1" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Max DD %</label>
+                        <input type="number" step="0.1" id="bt-form-dd" required placeholder="5.5" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Total Trades</label>
+                        <input type="number" id="bt-form-trades" required placeholder="120" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Sharpe Ratio</label>
+                        <input type="number" step="0.01" id="bt-form-sharpe" placeholder="2.1" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Notes / Slippage specs</label>
+                    <input type="text" id="bt-form-notes" placeholder="Tested on raw spread account..." class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="App.closeModal('modal-backtest')" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-xl">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow">Save Backtest</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 5: Code Script Modal (Requirement 1) -->
+    <div id="modal-code-file" class="modal-backdrop fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl max-w-3xl w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700 max-h-[92vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-100 dark:border-gray-700">
+                <h3 id="code-modal-title" class="text-lg font-bold text-gray-900 dark:text-white">Add Script</h3>
+                <button onclick="App.closeModal('modal-code-file')" class="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <i class="fas fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="code-file-form" class="space-y-4">
+                <input type="hidden" id="code-form-id">
+                <input type="hidden" id="code-form-folder">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Script File Name</label>
+                        <input type="text" id="code-form-name" required placeholder="algo_strategy.py" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs font-mono outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Language</label>
+                        <select id="code-form-lang" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                            <option value="python">Python (.py)</option>
+                            <option value="pinescript">TradingView PineScript (.pine)</option>
+                            <option value="mql5">MetaTrader 5 MQL5 (.mq5)</option>
+                            <option value="bash">Shell / Bash (.sh)</option>
+                            <option value="javascript">JavaScript / Node.js (.js)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Description / Purpose</label>
+                    <input type="text" id="code-form-desc" placeholder="Briefly describe what this script does..." class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Code Content</label>
+                    <textarea id="code-form-content" rows="12" required placeholder="// Enter your trading code here..." class="w-full p-4 bg-slate-900 text-slate-100 font-mono text-xs rounded-xl border border-gray-700 outline-none leading-relaxed"></textarea>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="App.closeModal('modal-code-file')" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-xl">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow">Save Code</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 6: New Folder Modal (Requirement 1) -->
+    <div id="modal-add-folder" class="modal-backdrop fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700">
+            <h3 class="text-base font-bold text-gray-900 dark:text-white mb-3">Create New Folder</h3>
+            <form id="folder-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Folder Name</label>
+                    <input type="text" id="folder-name-input" required placeholder="e.g. Risk Management Tools" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Folder Icon</label>
+                    <select id="folder-icon-select" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                        <option value="fa-folder">📁 Folder</option>
+                        <option value="fa-robot">🤖 Robot / Bots</option>
+                        <option value="fa-chart-line">📈 PineScript</option>
+                        <option value="fa-terminal">💻 Terminal / MQL5</option>
+                        <option value="fa-server">🖥️ Server Scripts</option>
+                        <option value="fa-shield-halved">🛡️ Risk Controls</option>
+                    </select>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="App.closeModal('modal-add-folder')" class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-xs font-semibold rounded-xl">Cancel</button>
+                    <button type="submit" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 7: Add/Edit VPS Modal (Requirement 4) -->
+    <div id="modal-vps" class="modal-backdrop fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700 max-h-[92vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-100 dark:border-gray-700">
+                <h3 id="vps-modal-title" class="text-lg font-bold text-gray-900 dark:text-white">Add VPS Server</h3>
+                <button onclick="App.closeModal('modal-vps')" class="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <i class="fas fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="vps-form" class="space-y-4">
+                <input type="hidden" id="vps-form-id">
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Server Name</label>
+                        <input type="text" id="vps-form-name" required placeholder="Tokyo Low-Latency Node" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Cloud Provider</label>
+                        <input type="text" id="vps-form-provider" required placeholder="AWS / Contabo / Hetzner" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Datacenter Location</label>
+                        <input type="text" id="vps-form-location" required placeholder="Frankfurt, Germany 🇩🇪" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">IP Address</label>
+                        <input type="text" id="vps-form-ip" required placeholder="192.168.1.1" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs font-mono outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">OS Distribution</label>
+                        <input type="text" id="vps-form-os" required placeholder="Ubuntu 24.04 LTS" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Hardware Specs</label>
+                        <input type="text" id="vps-form-specs" required placeholder="4 vCPU / 8 GB RAM / NVMe" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Round-trip Latency to Exchange</label>
+                    <input type="text" id="vps-form-latency" placeholder="e.g. 8 ms" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Notes / SSH Config</label>
+                    <textarea id="vps-form-notes" rows="2" placeholder="Cron jobs, restart scripts, firewall port notes..." class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none"></textarea>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="App.closeModal('modal-vps')" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-xl">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow">Save VPS</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 8: Unlock Broker Vault with Master PIN (Requirement 8) -->
+    <div id="modal-unlock-vault" class="modal-backdrop fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700 text-center">
+            <div class="w-14 h-14 mx-auto mb-3 bg-emerald-100 dark:bg-emerald-950/60 rounded-full flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-2xl">
+                <i class="fas fa-lock"></i>
+            </div>
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-1">Enter Master Password</h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-5">
+                Unlock credentials to view passwords, API keys, and 2FA tokens. (Default PIN: <b>1234</b>)
+            </p>
+
+            <div class="space-y-4">
+                <input type="password" id="vault-modal-pin" placeholder="Enter Master PIN" class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl text-center font-mono text-base tracking-widest text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500" onkeydown="if(event.key==='Enter'){if(BrokerVault.unlock(this.value)){App.closeModal('modal-unlock-vault');}}">
+                
+                <div class="flex gap-2">
+                    <button type="button" onclick="App.closeModal('modal-unlock-vault')" class="w-1/2 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-xl">Cancel</button>
+                    <button type="button" onclick="if(BrokerVault.unlock(document.getElementById('vault-modal-pin').value)){App.closeModal('modal-unlock-vault');}" class="w-1/2 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow">Unlock</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 9: Change Master PIN Modal (Requirement 8) -->
+    <div id="modal-change-pin" class="modal-backdrop fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700">
+            <h3 class="text-base font-bold text-gray-900 dark:text-white mb-2">Change Master PIN</h3>
+            <p class="text-xs text-gray-400 mb-4">Set a custom security PIN for your broker password vault.</p>
+
+            <form id="form-change-pin" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Current PIN</label>
+                    <input type="password" id="pin-current" required placeholder="Default is 1234" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">New PIN (min 4 characters)</label>
+                    <input type="password" id="pin-new" required class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Confirm New PIN</label>
+                    <input type="password" id="pin-confirm" required class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="App.closeModal('modal-change-pin')" class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-xs font-semibold rounded-xl">Cancel</button>
+                    <button type="submit" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow">Update PIN</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 10: Add/Edit Broker Account (Requirement 8) -->
+    <div id="modal-broker-account" class="modal-backdrop fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700 max-h-[92vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-100 dark:border-gray-700">
+                <h3 id="broker-modal-title" class="text-lg font-bold text-gray-900 dark:text-white">Broker Credentials</h3>
+                <button onclick="App.closeModal('modal-broker-account')" class="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <i class="fas fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="broker-account-form" class="space-y-4">
+                <input type="hidden" id="broker-form-id">
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Broker Name</label>
+                        <input type="text" id="broker-form-name" required placeholder="Zerodha, Exness, IBKR" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Account Type</label>
+                        <select id="broker-form-type" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                            <option value="Live Real Trading">Live Real Trading</option>
+                            <option value="Paper / Demo">Paper / Demo</option>
+                            <option value="Prop Firm Funded">Prop Firm Funded Account</option>
+                            <option value="Algo API Dedicated">Algo API Dedicated</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Market Traded</label>
+                    <input type="text" id="broker-form-market" placeholder="India Equities, Forex, CME Futures, Crypto" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">User ID / Client Code</label>
+                        <input type="text" id="broker-form-userid" required placeholder="User ID" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs font-mono outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Login Password</label>
+                        <input type="text" id="broker-form-password" required placeholder="Password" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs font-mono outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">2FA PIN / TOTP Seed</label>
+                        <input type="text" id="broker-form-pin" placeholder="PIN or Authenticator key" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs font-mono outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">API Key / Token</label>
+                        <input type="text" id="broker-form-apikey" placeholder="Optional API Key" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs font-mono outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Web Portal / Terminal Server URL</label>
+                    <input type="text" id="broker-form-url" placeholder="https://... or MT5 Server IP" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Notes / Instructions</label>
+                    <textarea id="broker-form-notes" rows="2" placeholder="IP whitelist details, token renewal schedule..." class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-xs outline-none"></textarea>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="App.closeModal('modal-broker-account')" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-xl">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow">Save Credentials</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts (Modular Load Order) -->
+    <script src="js/defaultData.js"></script>
+    <script src="js/brokerVault.js"></script>
+    <script src="js/codeVault.js"></script>
+    <script src="js/strategies.js"></script>
+    <script src="js/backtests.js"></script>
+    <script src="js/vpsManager.js"></script>
+    <script src="js/journal.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
